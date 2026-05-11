@@ -142,6 +142,9 @@ function switchTab(tab) {
   $("#pdfPanel").classList.toggle("active", tab === "pdf");
   $("#modeSwitch").style.display = tab === "chat" ? "flex" : "none";
   $("#workspaceTitle").textContent = tab === "chat" ? "Savage AI Chat" : "PDF Intelligence Studio";
+  if (window.innerWidth <= 1120) {
+    $(".workspace").scrollIntoView({ behavior: "smooth", block: "start" });
+  }
 }
 
 async function checkHealth() {

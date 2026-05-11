@@ -662,9 +662,44 @@ button:disabled {
   }
 
   .sidebar {
-    position: static;
+    position: sticky;
+    top: 0;
+    z-index: 3;
+    display: grid;
+    grid-template-columns: minmax(210px, 1fr) minmax(220px, 1.1fr);
+    align-items: start;
     border-right: 0;
     border-bottom: 1px solid var(--line);
+    padding: 18px;
+  }
+
+  .brand {
+    grid-column: 1;
+  }
+
+  .nav-tabs {
+    grid-column: 1;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .settings {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    grid-template-columns: 1fr 1fr;
+    align-items: end;
+  }
+
+  .settings .section-title,
+  .settings .hint {
+    grid-column: 1 / -1;
+  }
+
+  .status-pill {
+    display: none;
+  }
+
+  .workspace {
+    padding-top: 22px;
   }
 
   .chat-layout,
@@ -690,6 +725,41 @@ button:disabled {
   .workspace,
   .sidebar {
     padding: 18px;
+  }
+
+  .sidebar {
+    position: static;
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .brand,
+  .nav-tabs,
+  .settings {
+    grid-column: 1;
+    grid-row: auto;
+  }
+
+  .brand-mark {
+    width: 42px;
+    height: 42px;
+  }
+
+  .brand h1 {
+    font-size: 18px;
+  }
+
+  .nav-tabs {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .settings {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .settings .hint {
+    display: none;
   }
 
   .topbar,
