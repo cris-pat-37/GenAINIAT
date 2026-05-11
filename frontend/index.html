@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GenAI NIAT</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/assets/styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="brand-mark">G</div>
+          <div>
+            <h1>GenAI NIAT</h1>
+            <p>Chat + PDF intelligence</p>
+          </div>
+        </div>
+
+        <nav class="nav-tabs" aria-label="Workspace">
+          <button class="nav-button active" data-tab="chat">Savage AI</button>
+          <button class="nav-button" data-tab="pdf">PDF Studio</button>
+        </nav>
+
+        <section class="settings">
+          <div class="section-title">
+            <span>Settings</span>
+            <button id="clearSettings" class="ghost-button" type="button">Reset</button>
+          </div>
+          <label>
+            API key
+            <input id="apiKey" type="password" placeholder="Uses server key by default" autocomplete="off" />
+          </label>
+          <label>
+            Model
+            <select id="model">
+              <option value="llama-3.1-8b-instant">llama-3.1-8b-instant</option>
+              <option value="llama-3.3-70b-versatile">llama-3.3-70b-versatile</option>
+              <option value="mixtral-8x7b-32768">mixtral-8x7b-32768</option>
+              <option value="gemma2-9b-it">gemma2-9b-it</option>
+            </select>
+          </label>
+          <p class="hint">Paste a key only when you want to override the deployment key.</p>
+        </section>
+
+        <div class="status-pill" id="apiStatus">Checking backend...</div>
+      </aside>
+
+      <main class="workspace">
+        <section class="topbar">
+          <div>
+            <p class="eyebrow">Live deploy ready</p>
+            <h2 id="workspaceTitle">Savage AI Chat</h2>
+          </div>
+          <div class="mode-switch" id="modeSwitch">
+            <button type="button" data-tone="savage" class="active">Savage</button>
+            <button type="button" data-tone="mentor">Mentor</button>
+            <button type="button" data-tone="exam">Exam</button>
+          </div>
+        </section>
+
+        <section class="panel active" id="chatPanel">
+          <div class="chat-layout">
+            <div class="chat-window">
+              <div class="chat-log" id="chatLog">
+                <article class="message bot">
+                  <div class="avatar">S</div>
+                  <div class="bubble">
+                    Drop your name first. Then ask me anything: coding, GenAI, exams, project viva, career plans. I will help, but I may judge the laziness.
+                  </div>
+                </article>
+              </div>
+              <form class="composer" id="chatForm">
+                <input id="chatInput" type="text" placeholder="Ask Savage AI..." autocomplete="off" />
+                <button type="submit">Send</button>
+              </form>
+            </div>
+            <aside class="inspector">
+              <div class="metric">
+                <span>Name</span>
+                <strong id="userName">Not set</strong>
+              </div>
+              <div class="metric">
+                <span>Tone</span>
+                <strong id="toneName">Savage</strong>
+              </div>
+              <div class="quick-prompts">
+                <button type="button" data-prompt="My name is Sunny">Set name</button>
+                <button type="button" data-prompt="Explain RAG in simple words">RAG basics</button>
+                <button type="button" data-prompt="Prepare me for a GenAI project viva">Viva prep</button>
+              </div>
+            </aside>
+          </div>
+        </section>
+
+        <section class="panel" id="pdfPanel">
+          <div class="pdf-layout">
+            <div class="upload-zone" id="dropZone">
+              <input id="pdfFile" type="file" accept="application/pdf" hidden />
+              <div class="upload-icon">PDF</div>
+              <h3>Drop a PDF or choose a file</h3>
+              <p>Get a summary, concept links, study cards, keywords, and next actions.</p>
+              <button id="chooseFile" type="button">Choose PDF</button>
+              <span id="fileName">No file selected</span>
+            </div>
+
+            <div class="summary-controls">
+              <div class="segmented" id="summaryMode">
+                <button type="button" data-mode="quick">Quick</button>
+                <button type="button" data-mode="deep" class="active">Deep</button>
+                <button type="button" data-mode="creative">Creative</button>
+                <button type="button" data-mode="exam">Exam</button>
+              </div>
+              <button id="summarizeBtn" type="button">Summarize</button>
+            </div>
+
+            <div class="result-grid">
+              <article class="summary-block">
+                <div class="section-title">
+                  <span id="summaryTitle">Summary will appear here</span>
+                  <button id="copySummary" class="ghost-button" type="button">Copy</button>
+                </div>
+                <p id="overview">Upload a document to create a connected summary with revision material.</p>
+                <ul id="keyPoints"></ul>
+              </article>
+
+              <article class="graph-block">
+                <div class="section-title">
+                  <span>Concept Map</span>
+                  <span id="pdfMeta" class="mini-meta">Waiting</span>
+                </div>
+                <canvas id="conceptCanvas" width="640" height="420"></canvas>
+              </article>
+
+              <article class="cards-block">
+                <div class="section-title">
+                  <span>Study Cards</span>
+                </div>
+                <div id="studyCards" class="study-cards"></div>
+              </article>
+
+              <article class="cards-block">
+                <div class="section-title">
+                  <span>Keywords + Actions</span>
+                </div>
+                <div id="keywords" class="keywords"></div>
+                <ul id="actions" class="actions"></ul>
+              </article>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <script src="/assets/app.js"></script>
+  </body>
+</html>
+
