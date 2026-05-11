@@ -1,15 +1,18 @@
 :root {
-  --bg: #f4f1ea;
-  --panel: #fffdf7;
-  --ink: #18201f;
-  --muted: #65706c;
-  --line: #d9d2c6;
-  --green: #176b5b;
-  --green-dark: #0f493f;
-  --coral: #d95742;
-  --gold: #d99a21;
-  --blue: #3d6ca8;
-  --shadow: 0 24px 70px rgba(30, 39, 35, 0.12);
+  --bg: #090b14;
+  --panel: rgba(18, 24, 39, 0.78);
+  --panel-strong: rgba(24, 31, 50, 0.92);
+  --ink: #f5f7fb;
+  --muted: #98a4b8;
+  --soft: #c9d3e6;
+  --line: rgba(197, 214, 255, 0.16);
+  --cyan: #3ee7d1;
+  --blue: #6aa6ff;
+  --violet: #9f7aea;
+  --coral: #ff6b6b;
+  --amber: #f6c85f;
+  --green: #5ce1a8;
+  --shadow: 0 24px 90px rgba(0, 0, 0, 0.38);
 }
 
 * {
@@ -19,11 +22,25 @@
 body {
   margin: 0;
   min-height: 100vh;
+  overflow-x: hidden;
   background:
-    radial-gradient(circle at 20% 10%, rgba(217, 154, 33, 0.18), transparent 28%),
-    linear-gradient(135deg, #f7f3eb 0%, #eaf1ee 52%, #f8eee9 100%);
+    radial-gradient(circle at 14% 12%, rgba(62, 231, 209, 0.17), transparent 30%),
+    radial-gradient(circle at 84% 8%, rgba(255, 107, 107, 0.18), transparent 28%),
+    linear-gradient(135deg, #090b14 0%, #12182a 44%, #171323 100%);
   color: var(--ink);
   font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+body::before {
+  position: fixed;
+  inset: 0;
+  content: "";
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+  background-size: 42px 42px;
+  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.88), transparent 80%);
 }
 
 button,
@@ -36,9 +53,39 @@ button {
   cursor: pointer;
 }
 
+button:disabled {
+  cursor: wait;
+  opacity: 0.68;
+}
+
+.ambient {
+  position: fixed;
+  z-index: 0;
+  width: 38vw;
+  height: 38vw;
+  border-radius: 999px;
+  filter: blur(42px);
+  opacity: 0.32;
+  pointer-events: none;
+}
+
+.ambient-one {
+  left: -14vw;
+  top: 18vh;
+  background: #3ee7d1;
+}
+
+.ambient-two {
+  right: -16vw;
+  bottom: -10vh;
+  background: #ff6b6b;
+}
+
 .app-shell {
+  position: relative;
+  z-index: 1;
   display: grid;
-  grid-template-columns: 300px minmax(0, 1fr);
+  grid-template-columns: 310px minmax(0, 1fr);
   min-height: 100vh;
 }
 
@@ -47,9 +94,9 @@ button {
   flex-direction: column;
   gap: 24px;
   border-right: 1px solid var(--line);
-  background: rgba(255, 253, 247, 0.78);
+  background: rgba(8, 11, 21, 0.72);
   padding: 26px;
-  backdrop-filter: blur(18px);
+  backdrop-filter: blur(24px);
 }
 
 .brand {
@@ -60,19 +107,23 @@ button {
 
 .brand-mark {
   display: grid;
-  width: 48px;
-  height: 48px;
+  width: 52px;
+  height: 52px;
   place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: 8px;
-  background: var(--ink);
-  color: white;
-  font-weight: 800;
+  background: linear-gradient(145deg, var(--cyan), var(--blue) 48%, var(--coral));
+  color: #071018;
+  font-weight: 900;
+  box-shadow: 0 16px 42px rgba(62, 231, 209, 0.28);
 }
 
 .brand h1,
 .brand p,
 .topbar h2,
-.topbar p {
+.topbar p,
+.upload-zone h3,
+.upload-zone p {
   margin: 0;
 }
 
@@ -86,6 +137,13 @@ button {
 .mini-meta {
   color: var(--muted);
   font-size: 13px;
+}
+
+.eyebrow {
+  color: var(--cyan);
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: uppercase;
 }
 
 .nav-tabs,
@@ -102,22 +160,25 @@ button {
 .segmented button {
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: rgba(255, 253, 247, 0.78);
-  color: var(--ink);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--soft);
   padding: 11px 12px;
 }
 
 .nav-button {
+  position: relative;
+  overflow: hidden;
   text-align: left;
-  font-weight: 700;
+  font-weight: 800;
 }
 
 .nav-button.active,
 .mode-switch button.active,
 .segmented button.active {
-  border-color: var(--green);
-  background: var(--green);
+  border-color: rgba(62, 231, 209, 0.72);
+  background: linear-gradient(135deg, rgba(62, 231, 209, 0.22), rgba(106, 166, 255, 0.2));
   color: white;
+  box-shadow: inset 0 0 22px rgba(62, 231, 209, 0.08), 0 14px 32px rgba(0, 0, 0, 0.24);
 }
 
 .section-title {
@@ -126,7 +187,7 @@ button {
   justify-content: space-between;
   gap: 12px;
   margin-bottom: 12px;
-  font-weight: 800;
+  font-weight: 900;
 }
 
 .settings label {
@@ -134,7 +195,7 @@ button {
   gap: 7px;
   color: var(--muted);
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 800;
 }
 
 .settings input,
@@ -143,23 +204,29 @@ button {
   min-width: 0;
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: white;
+  background: rgba(255, 255, 255, 0.07);
   color: var(--ink);
   padding: 12px;
   outline: none;
 }
 
+.settings select option {
+  background: #12182a;
+  color: var(--ink);
+}
+
 .settings input:focus,
 .settings select:focus,
 .composer input:focus {
-  border-color: var(--green);
-  box-shadow: 0 0 0 3px rgba(23, 107, 91, 0.12);
+  border-color: var(--cyan);
+  box-shadow: 0 0 0 3px rgba(62, 231, 209, 0.13);
 }
 
 .status-pill {
   margin-top: auto;
   border: 1px solid var(--line);
   border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
   padding: 12px;
   color: var(--muted);
   font-size: 13px;
@@ -167,7 +234,7 @@ button {
 
 .workspace {
   min-width: 0;
-  padding: 28px;
+  padding: 30px;
 }
 
 .topbar {
@@ -179,7 +246,7 @@ button {
 }
 
 .topbar h2 {
-  font-size: 34px;
+  font-size: 38px;
   letter-spacing: 0;
 }
 
@@ -205,24 +272,25 @@ button {
 }
 
 .chat-layout {
-  grid-template-columns: minmax(0, 1fr) 280px;
+  grid-template-columns: minmax(0, 1fr) 290px;
 }
 
 .chat-window,
 .inspector,
-.upload-zone,
+.pdf-command,
 .summary-block,
 .graph-block,
 .cards-block {
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: rgba(255, 253, 247, 0.84);
+  background: var(--panel);
   box-shadow: var(--shadow);
+  backdrop-filter: blur(22px);
 }
 
 .chat-window {
   display: grid;
-  grid-template-rows: minmax(420px, calc(100vh - 206px)) auto;
+  grid-template-rows: minmax(430px, calc(100vh - 208px)) auto;
   overflow: hidden;
 }
 
@@ -248,31 +316,33 @@ button {
 
 .avatar {
   display: grid;
-  flex: 0 0 34px;
-  width: 34px;
-  height: 34px;
+  flex: 0 0 36px;
+  width: 36px;
+  height: 36px;
   place-items: center;
   border-radius: 8px;
-  background: var(--green);
-  color: white;
-  font-weight: 800;
+  background: linear-gradient(145deg, var(--cyan), var(--blue));
+  color: #071018;
+  font-weight: 900;
 }
 
 .message.user .avatar {
-  background: var(--blue);
+  background: linear-gradient(145deg, var(--coral), var(--amber));
 }
 
 .bubble {
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: white;
+  background: rgba(255, 255, 255, 0.075);
+  color: var(--soft);
   padding: 13px 14px;
   line-height: 1.55;
   white-space: pre-wrap;
 }
 
 .message.user .bubble {
-  background: #edf4ff;
+  background: rgba(106, 166, 255, 0.12);
+  color: white;
 }
 
 .composer {
@@ -288,10 +358,11 @@ button {
 #summarizeBtn {
   border: 0;
   border-radius: 8px;
-  background: var(--coral);
-  color: white;
-  font-weight: 800;
+  background: linear-gradient(135deg, var(--coral), var(--amber));
+  color: #130e0e;
+  font-weight: 900;
   padding: 12px 16px;
+  box-shadow: 0 16px 38px rgba(255, 107, 107, 0.22);
 }
 
 .inspector {
@@ -311,54 +382,75 @@ button {
 .metric span {
   color: var(--muted);
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 800;
+}
+
+.metric strong {
+  color: white;
+}
+
+.pdf-command {
+  display: grid;
+  grid-template-columns: minmax(380px, 1fr) auto;
+  gap: 18px;
+  padding: 16px;
 }
 
 .upload-zone {
   display: grid;
-  min-height: 230px;
-  place-items: center;
-  padding: 28px;
-  text-align: center;
+  grid-template-columns: 74px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+  min-height: 128px;
+  border: 1px dashed rgba(62, 231, 209, 0.38);
+  border-radius: 8px;
+  background: rgba(62, 231, 209, 0.055);
+  padding: 18px;
 }
 
 .upload-zone.dragging {
-  border-color: var(--green);
-  background: rgba(23, 107, 91, 0.08);
+  border-color: var(--cyan);
+  background: rgba(62, 231, 209, 0.12);
 }
 
-.upload-zone h3,
 .upload-zone p {
-  margin: 8px 0;
+  color: var(--muted);
+  line-height: 1.5;
 }
 
 .upload-icon {
   display: grid;
-  width: 72px;
-  height: 88px;
+  width: 64px;
+  height: 78px;
   place-items: center;
-  border: 2px solid var(--ink);
+  border: 1px solid rgba(255, 255, 255, 0.24);
   border-radius: 8px;
-  background: white;
-  color: var(--coral);
+  background: linear-gradient(150deg, rgba(255, 255, 255, 0.13), rgba(62, 231, 209, 0.08));
+  color: var(--cyan);
   font-weight: 900;
 }
 
 #fileName {
-  color: var(--muted);
+  grid-column: 2 / -1;
+  color: var(--amber);
   font-size: 13px;
+  font-weight: 800;
 }
 
 .summary-controls {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+  display: grid;
+  align-content: center;
+  justify-items: end;
   gap: 14px;
 }
 
 .result-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1.05fr) minmax(360px, 0.95fr);
+  grid-template-columns: minmax(330px, 0.78fr) minmax(520px, 1.22fr);
+  grid-template-areas:
+    "summary neural"
+    "focus neural"
+    "actions neural";
   gap: 18px;
 }
 
@@ -369,12 +461,25 @@ button {
 }
 
 .summary-block {
-  min-height: 420px;
+  grid-area: summary;
+}
+
+.neural-card {
+  grid-area: neural;
+  min-height: 680px;
+}
+
+.focus-card {
+  grid-area: focus;
+}
+
+.cards-block:last-child {
+  grid-area: actions;
 }
 
 #overview {
-  color: #27322f;
-  line-height: 1.7;
+  color: var(--soft);
+  line-height: 1.72;
 }
 
 #keyPoints,
@@ -382,15 +487,106 @@ button {
   display: grid;
   gap: 10px;
   padding-left: 20px;
+  color: var(--soft);
   line-height: 1.55;
 }
 
+.neural-stage {
+  position: relative;
+  min-height: 606px;
+  overflow: hidden;
+  border: 1px solid rgba(197, 214, 255, 0.18);
+  border-radius: 8px;
+  background:
+    radial-gradient(circle at 52% 48%, rgba(62, 231, 209, 0.17), transparent 18%),
+    radial-gradient(circle at 18% 18%, rgba(255, 107, 107, 0.12), transparent 22%),
+    radial-gradient(circle at 82% 84%, rgba(246, 200, 95, 0.12), transparent 20%),
+    linear-gradient(145deg, rgba(7, 12, 24, 0.98), rgba(19, 23, 43, 0.96));
+  perspective: 1000px;
+}
+
 #conceptCanvas {
+  position: absolute;
+  inset: 0;
   width: 100%;
-  height: 320px;
+  height: 100%;
+}
+
+.neural-nodes {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+}
+
+.neural-node {
+  position: absolute;
+  display: grid;
+  width: 180px;
+  min-height: 112px;
+  gap: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 8px;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.055));
+  color: white;
+  padding: 12px;
+  text-align: left;
+  box-shadow: 0 22px 52px rgba(0, 0, 0, 0.38), inset 0 0 28px rgba(255, 255, 255, 0.04);
+  transform: translate3d(var(--x), var(--y), var(--z)) rotateX(8deg) rotateY(var(--tilt));
+  transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+  user-select: none;
+}
+
+.neural-node::before {
+  width: 24px;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--node-color);
+  content: "";
+  box-shadow: 0 0 18px var(--node-color);
+}
+
+.neural-node strong {
+  overflow-wrap: anywhere;
+  font-size: 13px;
+  line-height: 1.26;
+}
+
+.neural-node span {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--soft);
+  font-size: 11px;
+  line-height: 1.35;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+.neural-node:hover,
+.neural-node.active,
+.neural-node.dragging {
+  border-color: var(--node-color);
+  box-shadow: 0 26px 62px rgba(0, 0, 0, 0.44), 0 0 34px color-mix(in srgb, var(--node-color) 34%, transparent);
+  transform: translate3d(var(--x), var(--y), 72px) rotateX(5deg) rotateY(0deg) scale(1.04);
+}
+
+.empty-network {
+  position: absolute;
+  inset: auto 26px 26px 26px;
+  display: grid;
+  gap: 6px;
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: linear-gradient(145deg, #fbfaf6, #eef5f1);
+  background: rgba(8, 11, 21, 0.62);
+  padding: 16px;
+  color: white;
+}
+
+.empty-network span {
+  color: var(--muted);
+}
+
+.empty-network.hidden {
+  display: none;
 }
 
 .study-cards {
@@ -401,13 +597,24 @@ button {
 .study-card {
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: white;
-  padding: 12px;
+  background: rgba(255, 255, 255, 0.065);
+  padding: 14px;
 }
 
 .study-card strong {
   display: block;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
+  color: white;
+}
+
+.study-card p {
+  margin: 0;
+  color: var(--soft);
+  line-height: 1.6;
+}
+
+.study-card.placeholder {
+  border-style: dashed;
 }
 
 .keywords {
@@ -418,22 +625,25 @@ button {
 }
 
 .keyword {
+  border: 1px solid rgba(106, 166, 255, 0.24);
   border-radius: 8px;
-  background: rgba(61, 108, 168, 0.12);
-  color: #24466f;
+  background: rgba(106, 166, 255, 0.12);
+  color: #d7e7ff;
   padding: 8px 10px;
   font-size: 13px;
-  font-weight: 800;
+  font-weight: 900;
 }
 
 .toast {
   position: fixed;
   right: 22px;
   bottom: 22px;
+  z-index: 4;
   max-width: 360px;
   transform: translateY(18px);
+  border: 1px solid var(--line);
   border-radius: 8px;
-  background: var(--ink);
+  background: rgba(8, 11, 21, 0.94);
   color: white;
   opacity: 0;
   padding: 13px 15px;
@@ -446,7 +656,7 @@ button {
   transform: translateY(0);
 }
 
-@media (max-width: 980px) {
+@media (max-width: 1120px) {
   .app-shell {
     grid-template-columns: 1fr;
   }
@@ -458,29 +668,43 @@ button {
   }
 
   .chat-layout,
+  .pdf-command,
   .result-grid {
     grid-template-columns: 1fr;
   }
 
-  .chat-window {
-    grid-template-rows: minmax(380px, 60vh) auto;
+  .result-grid {
+    grid-template-areas:
+      "summary"
+      "neural"
+      "focus"
+      "actions";
+  }
+
+  .summary-controls {
+    justify-items: start;
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 700px) {
   .workspace,
   .sidebar {
     padding: 18px;
   }
 
   .topbar,
-  .summary-controls {
+  .summary-controls,
+  .upload-zone {
     align-items: stretch;
+    grid-template-columns: 1fr;
+  }
+
+  .topbar {
     flex-direction: column;
   }
 
   .topbar h2 {
-    font-size: 28px;
+    font-size: 30px;
   }
 
   .composer {
@@ -490,5 +714,16 @@ button {
   .message {
     max-width: 100%;
   }
-}
 
+  .neural-card {
+    min-height: 560px;
+  }
+
+  .neural-stage {
+    min-height: 500px;
+  }
+
+  .neural-node {
+    width: 150px;
+  }
+}

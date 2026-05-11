@@ -10,6 +10,8 @@
     <link rel="stylesheet" href="/assets/styles.css" />
   </head>
   <body>
+    <div class="ambient ambient-one"></div>
+    <div class="ambient ambient-two"></div>
     <div class="app-shell">
       <aside class="sidebar">
         <div class="brand">
@@ -52,7 +54,7 @@
       <main class="workspace">
         <section class="topbar">
           <div>
-            <p class="eyebrow">Live deploy ready</p>
+            <p class="eyebrow">Live deploy ready intelligence lab</p>
             <h2 id="workspaceTitle">Savage AI Chat</h2>
           </div>
           <div class="mode-switch" id="modeSwitch">
@@ -98,24 +100,28 @@
 
         <section class="panel" id="pdfPanel">
           <div class="pdf-layout">
-            <div class="upload-zone" id="dropZone">
-              <input id="pdfFile" type="file" accept="application/pdf" hidden />
-              <div class="upload-icon">PDF</div>
-              <h3>Drop a PDF or choose a file</h3>
-              <p>Get a summary, concept links, study cards, keywords, and next actions.</p>
-              <button id="chooseFile" type="button">Choose PDF</button>
-              <span id="fileName">No file selected</span>
-            </div>
-
-            <div class="summary-controls">
-              <div class="segmented" id="summaryMode">
-                <button type="button" data-mode="quick">Quick</button>
-                <button type="button" data-mode="deep" class="active">Deep</button>
-                <button type="button" data-mode="creative">Creative</button>
-                <button type="button" data-mode="exam">Exam</button>
+            <section class="pdf-command">
+              <div class="upload-zone" id="dropZone">
+                <input id="pdfFile" type="file" accept="application/pdf" hidden />
+                <div class="upload-icon">PDF</div>
+                <div>
+                  <h3>Drop a PDF into the neural reader</h3>
+                  <p>Summaries become connected flashcards you can inspect and move around.</p>
+                </div>
+                <button id="chooseFile" type="button">Choose PDF</button>
+                <span id="fileName">No file selected</span>
               </div>
-              <button id="summarizeBtn" type="button">Summarize</button>
-            </div>
+
+              <div class="summary-controls">
+                <div class="segmented" id="summaryMode">
+                  <button type="button" data-mode="quick">Quick</button>
+                  <button type="button" data-mode="deep" class="active">Deep</button>
+                  <button type="button" data-mode="creative">Creative</button>
+                  <button type="button" data-mode="exam">Exam</button>
+                </div>
+                <button id="summarizeBtn" type="button">Summarize</button>
+              </div>
+            </section>
 
             <div class="result-grid">
               <article class="summary-block">
@@ -127,19 +133,31 @@
                 <ul id="keyPoints"></ul>
               </article>
 
-              <article class="graph-block">
+              <article class="graph-block neural-card">
                 <div class="section-title">
-                  <span>Concept Map</span>
+                  <span>Neural Flashcard Map</span>
                   <span id="pdfMeta" class="mini-meta">Waiting</span>
                 </div>
-                <canvas id="conceptCanvas" width="640" height="420"></canvas>
+                <div class="neural-stage" id="neuralStage">
+                  <canvas id="conceptCanvas" width="900" height="560"></canvas>
+                  <div id="neuralNodes" class="neural-nodes" aria-label="Interactive flashcard network"></div>
+                  <div class="empty-network" id="emptyNetwork">
+                    <strong>Upload a PDF to activate the network</strong>
+                    <span>Concepts and flashcards will connect like a study graph.</span>
+                  </div>
+                </div>
               </article>
 
-              <article class="cards-block">
+              <article class="cards-block focus-card">
                 <div class="section-title">
-                  <span>Study Cards</span>
+                  <span>Selected Flashcard</span>
                 </div>
-                <div id="studyCards" class="study-cards"></div>
+                <div id="studyCards" class="study-cards">
+                  <div class="study-card placeholder">
+                    <strong>No card selected</strong>
+                    <p>Click a node in the neural map after summarizing.</p>
+                  </div>
+                </div>
               </article>
 
               <article class="cards-block">
@@ -159,4 +177,3 @@
     <script src="/assets/app.js"></script>
   </body>
 </html>
-
