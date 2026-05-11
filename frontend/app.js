@@ -59,7 +59,7 @@ function addMessage(role, htmlOrText, isHtml = false) {
   const body = document.createElement("div");
   body.className = "message-body";
   const name = document.createElement("strong");
-  name.textContent = role === "user" ? "You" : "Savage Sigma AI";
+  name.textContent = role === "user" ? "You" : "SavageBot AI";
   const content = document.createElement("p");
   if (isHtml) {
     content.remove();
@@ -92,9 +92,10 @@ function switchTab(tab) {
   $("#toneWrap").classList.toggle("hidden", tab !== "chat");
   $("#summaryWrap").classList.toggle("hidden", tab !== "pdf");
   $("#attachPdf").classList.toggle("hidden", tab !== "pdf");
+  $("#chatForm").classList.toggle("has-attach", tab === "pdf");
   $("#modeLabel").textContent = tab === "chat" ? "Savage Chat" : "PDF Summarizer";
-  $("#workspaceTitle").textContent = tab === "chat" ? "Ask Sigma anything" : "Summarize a PDF in chat";
-  chatInput.placeholder = tab === "chat" ? "Message Savage Sigma AI..." : "Upload a PDF, then ask for a summary...";
+  $("#workspaceTitle").textContent = tab === "chat" ? "SavageBot AI" : "PDF Summary Bot";
+  chatInput.placeholder = tab === "chat" ? "Ask anything... lazy questions get roasted" : "Upload a PDF, then ask for a summary...";
   $("#suggestions").innerHTML = tab === "chat"
     ? `
       <button type="button" data-prompt="My name is Sunny">Set my name</button>

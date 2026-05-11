@@ -15,27 +15,14 @@
         <div class="brand">
           <div class="brand-mark">S</div>
           <div>
-            <h1>Savage Sigma AI</h1>
-            <p>Chatbot + PDF summarizer</p>
+            <h1>SavageBot AI</h1>
+            <p>Roast or teach</p>
           </div>
         </div>
 
-        <button class="new-chat" id="newChat" type="button">New chat</button>
-
-        <nav class="mode-list" aria-label="Project mode">
-          <button class="mode-item active" type="button" data-tab="chat">
-            <span>Savage Chat</span>
-            <small>Attitude AI assistant</small>
-          </button>
-          <button class="mode-item" type="button" data-tab="pdf">
-            <span>PDF Summarizer</span>
-            <small>Upload, summarize, revise</small>
-          </button>
-        </nav>
-
         <section class="settings">
           <div class="settings-head">
-            <strong>Settings</strong>
+            <strong>Configuration</strong>
             <button id="clearSettings" type="button">Reset</button>
           </div>
 
@@ -53,6 +40,7 @@
               <option value="gemma2-9b-it">gemma2-9b-it</option>
             </select>
           </label>
+          <p class="side-note">Server key by default. Paste your own key to override.</p>
 
           <label id="toneWrap">
             Tone
@@ -74,6 +62,30 @@
           </label>
         </section>
 
+        <button class="new-chat" id="newChat" type="button">+ New Chat</button>
+
+        <nav class="mode-list" aria-label="Project mode">
+          <button class="mode-item active" type="button" data-tab="chat">
+            <span>Savage Chat</span>
+            <small>Attitude AI assistant</small>
+          </button>
+          <button class="mode-item" type="button" data-tab="pdf">
+            <span>PDF Summarizer</span>
+            <small>Upload, summarize, revise</small>
+          </button>
+        </nav>
+
+        <section class="recent">
+          <p class="sidebar-title">Recent Chats</p>
+          <button class="recent-item" type="button">Current session</button>
+        </section>
+
+        <section class="coming">
+          <p class="sidebar-title">Coming Soon</p>
+          <div><span>Analytics</span><strong>Soon</strong></div>
+          <div><span>Performance</span><strong>Soon</strong></div>
+        </section>
+
         <div class="status" id="apiStatus">Checking backend...</div>
       </aside>
 
@@ -81,8 +93,8 @@
         <header class="topbar">
           <button class="mobile-menu" id="mobileMenu" type="button">Menu</button>
           <div>
-            <p id="modeLabel">Savage Chat</p>
-            <h2 id="workspaceTitle">Ask Sigma anything</h2>
+            <h2 id="workspaceTitle">SavageBot AI</h2>
+            <p id="modeLabel">Roast or teach</p>
           </div>
           <div class="identity">
             <span>Name</span>
@@ -94,7 +106,7 @@
           <article class="message assistant">
             <div class="avatar">S</div>
             <div class="message-body">
-              <strong>Savage Sigma AI</strong>
+              <strong>SavageBot AI</strong>
               <p>Drop your name first. Then ask me coding, GenAI, viva, or project questions. I will help, but I am not here to babysit weak prompts.</p>
             </div>
           </article>
@@ -106,16 +118,18 @@
           <button type="button" data-prompt="Prepare me for a GenAI project viva">Viva prep</button>
         </section>
 
-        <form class="composer" id="chatForm">
-          <input id="pdfFile" type="file" accept="application/pdf" hidden />
-          <button id="attachPdf" class="attach hidden" type="button">Upload PDF</button>
-          <input id="chatInput" type="text" placeholder="Message Savage Sigma AI..." autocomplete="off" />
-          <button id="sendButton" type="submit">Send</button>
-        </form>
-        <div class="file-chip hidden" id="fileChip">
-          <span id="fileName">No file selected</span>
-          <button id="clearFile" type="button">Remove</button>
-        </div>
+        <footer class="composer-wrap">
+          <form class="composer" id="chatForm">
+            <input id="pdfFile" type="file" accept="application/pdf" hidden />
+            <button id="attachPdf" class="attach hidden" type="button">Upload PDF</button>
+            <input id="chatInput" type="text" placeholder="Ask anything... lazy questions get roasted" autocomplete="off" />
+            <button id="sendButton" type="submit">Send</button>
+          </form>
+          <div class="file-chip hidden" id="fileChip">
+            <span id="fileName">No file selected</span>
+            <button id="clearFile" type="button">Remove</button>
+          </div>
+        </footer>
       </main>
     </div>
 
