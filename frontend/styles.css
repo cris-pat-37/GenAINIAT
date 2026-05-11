@@ -256,6 +256,30 @@ button:disabled {
   text-transform: uppercase;
 }
 
+.builder-card {
+  display: grid;
+  gap: 5px;
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  background: linear-gradient(135deg, #ffffff, #eaf5ff);
+  padding: 13px 14px;
+  box-shadow: 0 10px 28px rgba(45, 91, 140, 0.1);
+}
+
+.builder-card span {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.builder-card strong {
+  color: var(--accent-dark);
+  font-size: 15px;
+  letter-spacing: 0.04em;
+}
+
 .status {
   margin-top: auto;
   border: 1px solid var(--line);
