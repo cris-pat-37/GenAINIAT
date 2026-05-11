@@ -67,6 +67,13 @@ function addMessage(role, htmlOrText, isHtml = false) {
     const wrap = document.createElement("div");
     wrap.innerHTML = htmlOrText;
     body.appendChild(wrap);
+  } else if (role === "assistant") {
+    content.remove();
+    body.appendChild(name);
+    const wrap = document.createElement("div");
+    wrap.className = "formatted-content";
+    wrap.innerHTML = renderFormattedText(htmlOrText);
+    body.appendChild(wrap);
   } else {
     content.textContent = htmlOrText;
     body.append(name, content);
@@ -148,6 +155,87 @@ function escapeHtml(value) {
     .replaceAll("<", "&lt;")
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;");
+}
+
+function formatInline(value) {
+  return escapeHtml(value)
+    .replace(/`([^`]+)`/g, "<code class=\"inline-code\">$1</code>")
+    .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+}
+
+function renderTextBlock(text) {
+  const lines = text.split("\n");
+  const chunks = [];
+  let index = 0;
+
+  while (index < lines.length) {
+    const line = lines[index].trim();
+    if (!line) {
+      index += 1;
+      continue;
+    }
+
+    if (/^[-*]\s+/.test(line)) {
+      const items = [];
+      while (index < lines.length && /^[-*]\s+/.test(lines[index].trim())) {
+        items.push(`<li>${formatInline(lines[index].trim().replace(/^[-*]\s+/, ""))}</li>`);
+        index += 1;
+      }
+      chunks.push(`<ul>${items.join("")}</ul>`);
+      continue;
+    }
+
+    if (/^\d+\.\s+/.test(line)) {
+      const items = [];
+      while (index < lines.length && /^\d+\.\s+/.test(lines[index].trim())) {
+        items.push(`<li>${formatInline(lines[index].trim().replace(/^\d+\.\s+/, ""))}</li>`);
+        index += 1;
+      }
+      chunks.push(`<ol>${items.join("")}</ol>`);
+      continue;
+    }
+
+    const paragraph = [];
+    while (
+      index < lines.length &&
+      lines[index].trim() &&
+      !/^[-*]\s+/.test(lines[index].trim()) &&
+      !/^\d+\.\s+/.test(lines[index].trim())
+    ) {
+      paragraph.push(lines[index].trim());
+      index += 1;
+    }
+    chunks.push(`<p>${formatInline(paragraph.join(" "))}</p>`);
+  }
+
+  return chunks.join("");
+}
+
+function renderFormattedText(text) {
+  const source = String(text || "");
+  const codeFence = /```([\w+-]*)\n?([\s\S]*?)```/g;
+  let html = "";
+  let lastIndex = 0;
+  let match;
+
+  while ((match = codeFence.exec(source)) !== null) {
+    html += renderTextBlock(source.slice(lastIndex, match.index));
+    const language = match[1] || "code";
+    const code = escapeHtml(match[2].trim());
+    html += `
+      <div class="code-block">
+        <div class="code-head">
+          <span>${escapeHtml(language)}</span>
+          <button type="button" data-copy-code>Copy</button>
+        </div>
+        <pre><code>${code}</code></pre>
+      </div>
+    `;
+    lastIndex = match.index + match[0].length;
+  }
+
+  html += renderTextBlock(source.slice(lastIndex));
+  return html || "<p></p>";
 }
 
 function renderSummary(data) {
@@ -268,6 +356,16 @@ $("#clearFile").addEventListener("click", () => {
 });
 
 $("#mobileMenu").addEventListener("click", () => $(".sidebar").classList.toggle("open"));
+chatLog.addEventListener("click", async (event) => {
+  const button = event.target.closest("[data-copy-code]");
+  if (!button) return;
+  const code = button.closest(".code-block")?.querySelector("code")?.innerText || "";
+  await navigator.clipboard.writeText(code);
+  button.textContent = "Copied";
+  window.setTimeout(() => {
+    button.textContent = "Copy";
+  }, 1200);
+});
 apiKeyInput.addEventListener("change", saveSettings);
 modelSelect.addEventListener("change", saveSettings);
 toneSelect.addEventListener("change", saveSettings);
