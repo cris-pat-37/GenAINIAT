@@ -124,8 +124,21 @@ def health() -> dict[str, str]:
     return {"status": "ready"}
 
 
+def asks_builder(text: str) -> bool:
+    normalized = text.lower()
+    return bool(
+        re.search(
+            r"\b(who|which person).{0,30}\b(built|created|made|developed|designed|coded|build)\b|\b(built|created|made|developed|designed|coded)\s+you\b|\byour\s+(creator|developer|builder|maker)\b",
+            normalized,
+        )
+    )
+
+
 @app.post("/api/chat")
 async def chat(request: ChatRequest) -> dict[str, Any]:
+    if asks_builder(request.message):
+        return {"reply": "V.ARAVINDH", "user_name": request.user_name}
+
     detected_name = request.user_name or extract_name(request.message)
     if detected_name and not request.user_name:
         return {
@@ -175,6 +188,9 @@ Keep answers concise unless the user asks for detail.
 
 @app.post("/api/pdf-chat")
 async def pdf_chat(request: PdfChatRequest) -> dict[str, str]:
+    if asks_builder(request.question):
+        return {"reply": "V.ARAVINDH"}
+
     if not request.summary:
         raise HTTPException(status_code=400, detail="Summarize a PDF before asking follow-up questions.")
 
