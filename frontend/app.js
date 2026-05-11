@@ -31,6 +31,47 @@ function showToast(message) {
   window.setTimeout(() => toast.classList.remove("show"), 2600);
 }
 
+async function readApiError(response, fallback) {
+  let payload = null;
+  try {
+    payload = await response.json();
+  } catch {
+    return new Error(`${fallback}. Server returned ${response.status}.`);
+  }
+
+  const detail = payload?.detail;
+  if (detail && typeof detail === "object") {
+    const message = detail.message || fallback;
+    const action = detail.action ? `\n\nFix: ${detail.action}` : "";
+    const error = new Error(`${message}${action}`);
+    error.code = detail.code;
+    return error;
+  }
+  return new Error(typeof detail === "string" ? detail : fallback);
+}
+
+function showApiError(error, context) {
+  const message = error?.message || "Something failed.";
+  if (error?.code === "invalid_api_key") {
+    keyStatus.textContent = "Saved key failed. Paste a fresh key and click Save Key.";
+    showToast("Invalid API key. Save a fresh Groq key.");
+  } else if (error?.code === "rate_limited") {
+    showToast("Rate limit hit. Wait or switch key/model.");
+  } else if (error?.code === "quota_exceeded") {
+    showToast("API key limit reached. Save another key.");
+  }
+  addMessage("assistant", `${context} failed.\n\n${message}`);
+}
+
+async function parseJsonResponse(response, fallback) {
+  if (!response.ok) throw await readApiError(response, fallback);
+  try {
+    return await response.json();
+  } catch {
+    throw new Error(`${fallback}. Server sent an unreadable response.`);
+  }
+}
+
 function getAiConfig() {
   return {
     api_key: localStorage.getItem("groqApiKey") || null,
@@ -163,15 +204,14 @@ async function sendChat(message) {
         ...getAiConfig(),
       }),
     });
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.detail || "Chat failed");
+    const data = await parseJsonResponse(response, "Chat failed");
     if (data.user_name) state.userName = data.user_name;
     addMessage("assistant", data.reply);
     state.history.push({ role: "assistant", content: data.reply });
     localStorage.setItem("sigmaChatHistoryV2", JSON.stringify(state.history.slice(-20)));
     syncIdentity();
   } catch (error) {
-    addMessage("assistant", `Backend says: ${error.message}`);
+    showApiError(error, "Chat");
   } finally {
     setLoading(false);
   }
@@ -367,13 +407,12 @@ async function askPdfFollowup(question, options = {}) {
         ...getAiConfig(),
       }),
     });
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.detail || "PDF follow-up failed");
+    const data = await parseJsonResponse(response, "PDF follow-up failed");
     addMessage("assistant", data.reply);
     state.pdfHistory.push({ role: "assistant", content: data.reply });
     localStorage.setItem("sigmaPdfHistoryV1", JSON.stringify(state.pdfHistory.slice(-8)));
   } catch (error) {
-    addMessage("assistant", `PDF follow-up failed: ${error.message}`);
+    showApiError(error, "PDF follow-up");
   } finally {
     setLoading(false);
   }
@@ -410,14 +449,13 @@ async function summarizePdf(userPrompt) {
 
   try {
     const response = await fetch("/api/summarize", { method: "POST", body: formData });
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.detail || "Summary failed");
+    const data = await parseJsonResponse(response, "PDF summary failed");
     renderSummary(data);
     if (shouldAnswerAfterSummary) {
       await askPdfFollowup(userPrompt, { addUser: false });
     }
   } catch (error) {
-    addMessage("assistant", `PDF summary failed: ${error.message}`);
+    showApiError(error, "PDF summary");
   } finally {
     setLoading(false);
   }
@@ -442,11 +480,10 @@ async function comparePdfs(userPrompt) {
 
   try {
     const response = await fetch("/api/compare-pdfs", { method: "POST", body: formData });
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.detail || "Comparison failed");
+    const data = await parseJsonResponse(response, "PDF comparison failed");
     renderComparison(data);
   } catch (error) {
-    addMessage("assistant", `PDF comparison failed: ${error.message}`);
+    showApiError(error, "PDF comparison");
   } finally {
     setLoading(false);
   }

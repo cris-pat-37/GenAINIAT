@@ -64,9 +64,65 @@ def get_api_key(api_key: str | None) -> str:
     if not resolved:
         raise HTTPException(
             status_code=400,
-            detail="Missing Groq API key. Add GROQ_API_KEY on the server or paste one in Settings.",
+            detail={
+                "code": "missing_api_key",
+                "message": "No Groq API key is available. Save your own key in the sidebar or configure GROQ_API_KEY on the server.",
+                "action": "Open https://console.groq.com/home, create a key, paste it in the sidebar, and click Save Key.",
+            },
         )
     return resolved
+
+
+def groq_error_detail(status_code: int, response_text: str, parsed: dict[str, Any] | None = None) -> dict[str, str]:
+    raw_message = ""
+    if parsed:
+        error = parsed.get("error")
+        if isinstance(error, dict):
+            raw_message = str(error.get("message") or error.get("code") or "")
+        elif isinstance(error, str):
+            raw_message = error
+        elif parsed.get("message"):
+            raw_message = str(parsed["message"])
+
+    fallback = raw_message or response_text[:220] or "The AI service rejected the request."
+    lowered = fallback.lower()
+
+    if status_code in {401, 403} or "invalid api key" in lowered or "api key" in lowered and "invalid" in lowered:
+        return {
+            "code": "invalid_api_key",
+            "message": "That API key is invalid or not allowed. The app cannot use it.",
+            "action": "Create a fresh Groq key, paste it in the sidebar, click Save Key, then try again.",
+        }
+    if status_code == 429 or "rate limit" in lowered or "too many requests" in lowered:
+        return {
+            "code": "rate_limited",
+            "message": "Groq rate limit hit. The model is saying, 'pause, breathe, come back in a minute.'",
+            "action": "Wait a little, switch to a lighter model, or save another valid Groq key.",
+        }
+    if status_code == 402 or "quota" in lowered or "limit reached" in lowered or "billing" in lowered:
+        return {
+            "code": "quota_exceeded",
+            "message": "The saved/server API key has run out of available quota.",
+            "action": "Use a different Groq key from the sidebar or wait until the account limit resets.",
+        }
+    if status_code == 404 or "model" in lowered and ("not found" in lowered or "does not exist" in lowered):
+        return {
+            "code": "model_unavailable",
+            "message": "Selected model is not available for this key/account.",
+            "action": "Pick another model from the sidebar and try again.",
+        }
+    if status_code in {500, 502, 503, 504}:
+        return {
+            "code": "ai_service_down",
+            "message": "Groq is not responding properly right now.",
+            "action": "Wait a bit and retry. If it keeps failing, switch model or key.",
+        }
+
+    return {
+        "code": "ai_request_failed",
+        "message": fallback,
+        "action": "Check the key, model, and request size, then try again.",
+    }
 
 
 async def groq_chat(
@@ -92,13 +148,44 @@ async def groq_chat(
             response = await client.post(GROQ_CHAT_URL, headers=headers, json=payload)
             response.raise_for_status()
     except httpx.HTTPStatusError as exc:
-        detail = exc.response.text[:500]
+        parsed = None
+        try:
+            parsed = exc.response.json()
+        except ValueError:
+            parsed = None
+        detail = groq_error_detail(exc.response.status_code, exc.response.text, parsed)
         raise HTTPException(status_code=exc.response.status_code, detail=detail) from exc
+    except httpx.TimeoutException as exc:
+        raise HTTPException(
+            status_code=504,
+            detail={
+                "code": "ai_timeout",
+                "message": "The AI service took too long to answer.",
+                "action": "Retry with a shorter PDF/question or switch to a faster model.",
+            },
+        ) from exc
     except httpx.HTTPError as exc:
-        raise HTTPException(status_code=502, detail=f"AI service error: {exc}") from exc
+        raise HTTPException(
+            status_code=502,
+            detail={
+                "code": "ai_connection_failed",
+                "message": "Could not connect to the AI service.",
+                "action": "Check internet/server connectivity and try again.",
+            },
+        ) from exc
 
-    data = response.json()
-    return data["choices"][0]["message"]["content"].strip()
+    try:
+        data = response.json()
+        return data["choices"][0]["message"]["content"].strip()
+    except (KeyError, IndexError, TypeError, ValueError) as exc:
+        raise HTTPException(
+            status_code=502,
+            detail={
+                "code": "bad_ai_response",
+                "message": "The AI service returned an unexpected response.",
+                "action": "Retry once. If it repeats, switch model.",
+            },
+        ) from exc
 
 
 def extract_name(text: str) -> str | None:
