@@ -738,6 +738,12 @@ button:disabled {
 }
 
 @media (max-width: 920px) {
+  .app,
+  .main {
+    height: 100dvh;
+    min-height: 100dvh;
+  }
+
   .app {
     grid-template-columns: 1fr;
   }
@@ -781,50 +787,181 @@ button:disabled {
 
   .mobile-menu {
     display: block;
+    padding: 8px 10px;
+    font-size: 13px;
   }
 
   .topbar {
-    padding: 14px 18px;
+    gap: 10px;
+    padding: 10px 12px;
   }
 
   .topbar h2 {
-    font-size: 21px;
+    font-size: 18px;
+  }
+
+  .topbar p {
+    margin-top: 2px;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+  }
+
+  .identity {
+    display: none;
   }
 
   .chat-stream {
-    padding: 22px 16px;
+    gap: 12px;
+    padding: 14px 10px 12px;
   }
 
   .message,
   .message.user {
-    grid-template-columns: 38px minmax(0, 1fr);
+    display: flex;
+    align-items: flex-end;
+    gap: 7px;
     width: 100%;
   }
 
+  .message.assistant {
+    justify-content: flex-start;
+  }
+
+  .message.user {
+    justify-content: flex-end;
+  }
+
+  .message .avatar {
+    width: 28px;
+    height: 28px;
+    flex: 0 0 28px;
+    border-radius: 50%;
+    font-size: 11px;
+  }
+
   .message.user .avatar {
-    grid-column: 1;
+    display: none;
+  }
+
+  .message.assistant .message-body {
+    max-width: min(82vw, 560px);
+    border-bottom-left-radius: 4px;
   }
 
   .message.user .message-body {
-    grid-column: 2;
+    max-width: min(78vw, 520px);
+    border-bottom-right-radius: 4px;
+    text-align: left;
+  }
+
+  .message-body {
+    border-radius: 18px;
+    padding: 11px 13px;
+    font-size: 14px;
+    line-height: 1.5;
+    box-shadow: 0 6px 18px rgba(45, 91, 140, 0.08);
+  }
+
+  .message-body > strong {
+    margin-bottom: 4px;
+    font-size: 12px;
+  }
+
+  .formatted-content {
+    gap: 10px;
+  }
+
+  .code-block pre {
+    padding: 12px;
+  }
+
+  .code-block code {
+    font-size: 12px;
+    line-height: 1.55;
   }
 
   .suggestions {
     overflow-x: auto;
     justify-content: flex-start;
-    padding-inline: 16px;
+    gap: 8px;
+    padding: 0 10px 8px;
+    scrollbar-width: none;
+  }
+
+  .suggestions::-webkit-scrollbar {
+    display: none;
+  }
+
+  .suggestions button {
+    flex: 0 0 auto;
+    padding: 8px 10px;
+    font-size: 12px;
   }
 
   .composer-wrap {
-    padding: 12px 16px 14px;
+    padding: 8px 10px calc(8px + env(safe-area-inset-bottom));
   }
 
   .composer {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px;
+    align-items: center;
   }
 
-  .composer button,
+  .composer.has-attach {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+
+  .composer input {
+    height: 44px;
+    border-radius: 999px;
+    padding: 0 14px;
+    font-size: 14px;
+    box-shadow: none;
+  }
+
+  .composer button {
+    min-width: 44px;
+    height: 44px;
+    border-radius: 999px;
+    padding: 0 14px;
+    font-size: 13px;
+  }
+
   .composer .attach {
-    min-height: 46px;
+    display: grid;
+    place-items: center;
+    width: 44px;
+    min-width: 44px;
+    padding: 0;
+    font-size: 0;
+  }
+
+  .composer .attach::before {
+    content: "+";
+    font-size: 26px;
+    line-height: 1;
+  }
+
+  .file-chip {
+    justify-content: flex-start;
+    gap: 6px;
+    padding-top: 7px;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    scrollbar-width: none;
+  }
+
+  .file-chip::-webkit-scrollbar {
+    display: none;
+  }
+
+  .pdf-chip {
+    max-width: 180px;
+    flex: 0 0 auto;
+  }
+
+  .file-chip button {
+    flex: 0 0 auto;
   }
 }
