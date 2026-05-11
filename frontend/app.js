@@ -4,8 +4,8 @@ const state = {
   userName: localStorage.getItem("userName") || "",
   history: JSON.parse(localStorage.getItem("sigmaChatHistoryV2") || "[]"),
   selectedFile: null,
-  pdfSummary: null,
-  pdfHistory: [],
+  pdfSummary: JSON.parse(localStorage.getItem("sigmaPdfSummaryV1") || "null"),
+  pdfHistory: JSON.parse(localStorage.getItem("sigmaPdfHistoryV1") || "[]"),
 };
 
 const $ = (selector) => document.querySelector(selector);
@@ -243,6 +243,8 @@ function renderFormattedText(text) {
 function renderSummary(data) {
   state.pdfSummary = data;
   state.pdfHistory = [];
+  localStorage.setItem("sigmaPdfSummaryV1", JSON.stringify(data));
+  localStorage.removeItem("sigmaPdfHistoryV1");
   const points = (data.key_points || []).map((item) => `<li>${escapeHtml(item)}</li>`).join("");
   const actions = (data.action_items || []).map((item) => `<li>${escapeHtml(item)}</li>`).join("");
   const keywords = (data.keywords || []).map((item) => `<span class="tag">${escapeHtml(item)}</span>`).join("");
@@ -270,8 +272,10 @@ function renderSummary(data) {
   `, true);
 }
 
-async function askPdfFollowup(question) {
-  addMessage("user", question);
+async function askPdfFollowup(question, options = {}) {
+  if (options.addUser !== false) {
+    addMessage("user", question);
+  }
   state.pdfHistory.push({ role: "user", content: question });
   setLoading(true);
 
@@ -290,6 +294,7 @@ async function askPdfFollowup(question) {
     if (!response.ok) throw new Error(data.detail || "PDF follow-up failed");
     addMessage("assistant", data.reply);
     state.pdfHistory.push({ role: "assistant", content: data.reply });
+    localStorage.setItem("sigmaPdfHistoryV1", JSON.stringify(state.pdfHistory.slice(-8)));
   } catch (error) {
     addMessage("assistant", `PDF follow-up failed: ${error.message}`);
   } finally {
@@ -299,6 +304,10 @@ async function askPdfFollowup(question) {
 
 async function summarizePdf(userPrompt) {
   if (!state.selectedFile) {
+    if (state.pdfSummary && userPrompt) {
+      askPdfFollowup(userPrompt);
+      return;
+    }
     showToast("Upload a PDF first.");
     $("#pdfFile").click();
     return;
@@ -306,6 +315,9 @@ async function summarizePdf(userPrompt) {
 
   addMessage("user", userPrompt || `Summarize ${state.selectedFile.name}`);
   setLoading(true);
+  const shouldAnswerAfterSummary = Boolean(
+    userPrompt && !/summari[sz]e|summary|flashcards?|keywords?|action items?|notes?/i.test(userPrompt)
+  );
 
   const formData = new FormData();
   formData.append("file", state.selectedFile);
@@ -319,6 +331,9 @@ async function summarizePdf(userPrompt) {
     const data = await response.json();
     if (!response.ok) throw new Error(data.detail || "Summary failed");
     renderSummary(data);
+    if (shouldAnswerAfterSummary) {
+      await askPdfFollowup(userPrompt, { addUser: false });
+    }
   } catch (error) {
     addMessage("assistant", `PDF summary failed: ${error.message}`);
   } finally {
@@ -335,6 +350,8 @@ function setFile(file) {
   state.selectedFile = file;
   state.pdfSummary = null;
   state.pdfHistory = [];
+  localStorage.removeItem("sigmaPdfSummaryV1");
+  localStorage.removeItem("sigmaPdfHistoryV1");
   $("#fileName").textContent = file.name;
   $("#fileChip").classList.remove("hidden");
   addMessage("assistant", `PDF loaded: ${file.name}. Hit Send to summarize it, or type what kind of summary you want.`);
@@ -391,6 +408,8 @@ $("#clearFile").addEventListener("click", () => {
   state.selectedFile = null;
   state.pdfSummary = null;
   state.pdfHistory = [];
+  localStorage.removeItem("sigmaPdfSummaryV1");
+  localStorage.removeItem("sigmaPdfHistoryV1");
   $("#pdfFile").value = "";
   $("#fileChip").classList.add("hidden");
 });
