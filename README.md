@@ -50,9 +50,19 @@ Users can also paste their own API key in the app settings to override the serve
    - `DEFAULT_MODEL` = `llama-3.1-8b-instant`
 5. Deploy and use the Render URL as the live project link.
 
+## Deploy On Vercel
+
+1. Import the GitHub repository into Vercel.
+2. Choose the **FastAPI** preset and keep the root directory as `./`.
+3. Add environment variables:
+   - `GROQ_API_KEY`
+   - `DEFAULT_MODEL` = `llama-3.1-8b-instant`
+4. Deploy.
+
+Vercel uses `api/main.py` and `pyproject.toml` to locate the FastAPI app at `backend.main:app`.
+
 ## Project Notes
 
 - `.env` is ignored by Git so API keys do not get committed.
 - The frontend can use the server API key or a user-provided key.
 - Scanned/image-only PDFs need OCR first because standard PDF text extraction will not find text.
-
