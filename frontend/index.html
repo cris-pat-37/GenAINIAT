@@ -120,13 +120,13 @@
 
         <footer class="composer-wrap">
           <form class="composer" id="chatForm">
-            <input id="pdfFile" type="file" accept="application/pdf" hidden />
-            <button id="attachPdf" class="attach hidden" type="button">Upload PDF</button>
+            <input id="pdfFile" type="file" accept="application/pdf" multiple hidden />
+            <button id="attachPdf" class="attach hidden" type="button">Upload PDFs</button>
             <input id="chatInput" type="text" placeholder="Ask anything... lazy questions get roasted" autocomplete="off" />
             <button id="sendButton" type="submit">Send</button>
           </form>
           <div class="file-chip hidden" id="fileChip">
-            <span id="fileName">No file selected</span>
+            <span id="fileName">No files selected</span>
             <button id="clearFile" type="button">Remove</button>
           </div>
         </footer>

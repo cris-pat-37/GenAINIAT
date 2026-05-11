@@ -3,7 +3,7 @@ const state = {
   tone: localStorage.getItem("tone") || "savage",
   userName: localStorage.getItem("userName") || "",
   history: JSON.parse(localStorage.getItem("sigmaChatHistoryV2") || "[]"),
-  selectedFile: null,
+  selectedFiles: [],
   pdfSummary: JSON.parse(localStorage.getItem("sigmaPdfSummaryV1") || "null"),
   pdfHistory: JSON.parse(localStorage.getItem("sigmaPdfHistoryV1") || "[]"),
 };
@@ -104,7 +104,7 @@ function switchTab(tab) {
   $("#chatForm").classList.toggle("has-attach", tab === "pdf");
   $("#modeLabel").textContent = tab === "chat" ? "Savage Chat" : "PDF Summarizer";
   $("#workspaceTitle").textContent = tab === "chat" ? "SavageBot AI" : "PDF Summary Bot";
-  chatInput.placeholder = tab === "chat" ? "Ask anything... lazy questions get roasted" : "Upload a PDF, then ask for a summary...";
+  chatInput.placeholder = tab === "chat" ? "Ask anything... lazy questions get roasted" : "Upload PDFs, then ask for summary or comparison...";
   $("#suggestions").innerHTML = tab === "chat"
     ? `
       <button type="button" data-prompt="My name is Sunny">Set my name</button>
@@ -113,8 +113,8 @@ function switchTab(tab) {
     `
     : `
       <button type="button" data-prompt="Summarize this PDF for exam revision">Exam summary</button>
-      <button type="button" data-prompt="Create flashcards from this PDF">Flashcards</button>
-      <button type="button" data-prompt="Ask a follow-up from this summary">Follow-up</button>
+      <button type="button" data-prompt="Compare these PDFs and rank them">Compare</button>
+      <button type="button" data-prompt="Who is the strongest and why?">Best one?</button>
     `;
   bindSuggestions();
   $(".sidebar").classList.remove("open");
@@ -272,6 +272,57 @@ function renderSummary(data) {
   `, true);
 }
 
+function renderComparison(data) {
+  state.pdfSummary = data;
+  state.pdfHistory = [];
+  localStorage.setItem("sigmaPdfSummaryV1", JSON.stringify(data));
+  localStorage.removeItem("sigmaPdfHistoryV1");
+  const ranking = (data.ranking || []).map((item) => (
+    `<li><strong>#${escapeHtml(item.rank)} ${escapeHtml(item.file_name)}</strong>: ${escapeHtml(item.reason)}</li>`
+  )).join("");
+  const rows = (data.comparison_table || []).map((row) => `
+    <tr>
+      <td>${escapeHtml(row.criterion)}</td>
+      <td>${escapeHtml(row.winner)}</td>
+      <td>${escapeHtml(row.notes)}</td>
+    </tr>
+  `).join("");
+  const strengths = (data.strengths || []).map((item) => `
+    <div class="flashcard">
+      <strong>${escapeHtml(item.file_name)} strengths</strong>
+      <ul>${(item.points || []).map((point) => `<li>${escapeHtml(point)}</li>`).join("")}</ul>
+    </div>
+  `).join("");
+  const weaknesses = (data.weaknesses || []).map((item) => `
+    <div class="flashcard">
+      <strong>${escapeHtml(item.file_name)} weaknesses</strong>
+      <ul>${(item.points || []).map((point) => `<li>${escapeHtml(point)}</li>`).join("")}</ul>
+    </div>
+  `).join("");
+
+  addMessage("assistant", `
+    <div class="summary-card">
+      <h3>${escapeHtml(data.title || "PDF Comparison")}</h3>
+      <p><strong>Verdict:</strong> ${escapeHtml(data.verdict || "No verdict returned.")}</p>
+      <h4>Ranking</h4>
+      <ol>${ranking || "<li>No ranking returned.</li>"}</ol>
+      <h4>Comparison Table</h4>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Criterion</th><th>Winner</th><th>Notes</th></tr></thead>
+          <tbody>${rows || "<tr><td colspan='3'>No table returned.</td></tr>"}</tbody>
+        </table>
+      </div>
+      <h4>Strengths</h4>
+      <div class="flashcards">${strengths || "<p>No strengths returned.</p>"}</div>
+      <h4>Weaknesses</h4>
+      <div class="flashcards">${weaknesses || "<p>No weaknesses returned.</p>"}</div>
+      <h4>Recommendation</h4>
+      <p>${escapeHtml(data.recommendation || "No recommendation returned.")}</p>
+    </div>
+  `, true);
+}
+
 async function askPdfFollowup(question, options = {}) {
   if (options.addUser !== false) {
     addMessage("user", question);
@@ -303,7 +354,7 @@ async function askPdfFollowup(question, options = {}) {
 }
 
 async function summarizePdf(userPrompt) {
-  if (!state.selectedFile) {
+  if (!state.selectedFiles.length) {
     if (state.pdfSummary && userPrompt) {
       askPdfFollowup(userPrompt);
       return;
@@ -313,14 +364,19 @@ async function summarizePdf(userPrompt) {
     return;
   }
 
-  addMessage("user", userPrompt || `Summarize ${state.selectedFile.name}`);
+  if (state.selectedFiles.length > 1) {
+    comparePdfs(userPrompt || "Compare these PDFs and rank them");
+    return;
+  }
+
+  addMessage("user", userPrompt || `Summarize ${state.selectedFiles[0].name}`);
   setLoading(true);
   const shouldAnswerAfterSummary = Boolean(
     userPrompt && !/summari[sz]e|summary|flashcards?|keywords?|action items?|notes?/i.test(userPrompt)
   );
 
   const formData = new FormData();
-  formData.append("file", state.selectedFile);
+  formData.append("file", state.selectedFiles[0]);
   formData.append("mode", summaryModeSelect.value);
   const config = getAiConfig();
   if (config.api_key) formData.append("api_key", config.api_key);
@@ -341,20 +397,55 @@ async function summarizePdf(userPrompt) {
   }
 }
 
-function setFile(file) {
-  if (!file) return;
-  if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
-    showToast("Upload a PDF file.");
+async function comparePdfs(userPrompt) {
+  if (state.selectedFiles.length < 2) {
+    showToast("Upload at least two PDFs to compare.");
     return;
   }
-  state.selectedFile = file;
+
+  addMessage("user", userPrompt || "Compare these PDFs");
+  setLoading(true);
+
+  const formData = new FormData();
+  state.selectedFiles.forEach((file) => formData.append("files", file));
+  formData.append("mode", summaryModeSelect.value);
+  formData.append("question", userPrompt || "Compare these PDFs and rank them.");
+  const config = getAiConfig();
+  if (config.api_key) formData.append("api_key", config.api_key);
+  formData.append("model", config.model);
+
+  try {
+    const response = await fetch("/api/compare-pdfs", { method: "POST", body: formData });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.detail || "Comparison failed");
+    renderComparison(data);
+  } catch (error) {
+    addMessage("assistant", `PDF comparison failed: ${error.message}`);
+  } finally {
+    setLoading(false);
+  }
+}
+
+function setFiles(files) {
+  const pdfs = Array.from(files || []).filter((file) => file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf"));
+  if (!pdfs.length) {
+    showToast("Upload PDF files.");
+    return;
+  }
+  state.selectedFiles = pdfs.slice(0, 5);
   state.pdfSummary = null;
   state.pdfHistory = [];
   localStorage.removeItem("sigmaPdfSummaryV1");
   localStorage.removeItem("sigmaPdfHistoryV1");
-  $("#fileName").textContent = file.name;
+  $("#fileName").innerHTML = state.selectedFiles.map((file) => `<span class="pdf-chip">${escapeHtml(file.name)}</span>`).join("");
   $("#fileChip").classList.remove("hidden");
-  addMessage("assistant", `PDF loaded: ${file.name}. Hit Send to summarize it, or type what kind of summary you want.`);
+  const count = state.selectedFiles.length;
+  addMessage(
+    "assistant",
+    count === 1
+      ? `PDF loaded: ${state.selectedFiles[0].name}. Hit Send to summarize it, or ask a specific question.`
+      : `${count} PDFs loaded. Ask me to compare, rank, select the best, or find differences. Finally, a useful task.`
+  );
 }
 
 function bindSuggestions() {
@@ -403,9 +494,9 @@ $("#newChat").addEventListener("click", () => {
 });
 
 $("#attachPdf").addEventListener("click", () => $("#pdfFile").click());
-$("#pdfFile").addEventListener("change", (event) => setFile(event.target.files[0]));
+$("#pdfFile").addEventListener("change", (event) => setFiles(event.target.files));
 $("#clearFile").addEventListener("click", () => {
-  state.selectedFile = null;
+  state.selectedFiles = [];
   state.pdfSummary = null;
   state.pdfHistory = [];
   localStorage.removeItem("sigmaPdfSummaryV1");

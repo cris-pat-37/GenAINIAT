@@ -236,6 +236,85 @@ def parse_json_object(text: str) -> dict[str, Any]:
     }
 
 
+@app.post("/api/compare-pdfs")
+async def compare_pdfs(
+    files: list[UploadFile] = File(...),
+    mode: str = Form("deep"),
+    question: str = Form("Compare these PDFs and tell me which one is stronger."),
+    api_key: str | None = Form(None),
+    model: str | None = Form(None),
+) -> dict[str, Any]:
+    if len(files) < 2:
+        raise HTTPException(status_code=400, detail="Upload at least two PDFs to compare.")
+    if len(files) > 5:
+        raise HTTPException(status_code=400, detail="Compare up to 5 PDFs at a time. Don't turn the app into a luggage counter.")
+
+    started = time.time()
+    documents = []
+    for file in files:
+        if not file.filename.lower().endswith(".pdf"):
+            raise HTTPException(status_code=400, detail=f"{file.filename} is not a PDF.")
+        text, page_count = extract_pdf_text(await file.read())
+        if not text:
+            raise HTTPException(status_code=400, detail=f"No extractable text found in {file.filename}.")
+        documents.append(
+            {
+                "file_name": file.filename,
+                "pages": page_count,
+                "characters_read": len(text),
+                "text": text[:9000],
+            }
+        )
+
+    docs_text = "\n\n".join(
+        f"### DOCUMENT {index + 1}: {doc['file_name']} ({doc['pages']} pages)\n{doc['text']}"
+        for index, doc in enumerate(documents)
+    )
+    prompt = f"""
+You are Savage Sigma AI comparing multiple PDFs.
+No sugar coating. Be brutally useful, but avoid slurs, hate, threats, sexual content, or targeted harassment.
+The user asked: {question}
+Comparison mode: {mode}
+
+Return ONLY valid JSON with this schema:
+{{
+  "title": "short comparison title",
+  "verdict": "direct answer first",
+  "ranking": [
+    {{"rank": 1, "file_name": "name.pdf", "reason": "why this rank"}}
+  ],
+  "comparison_table": [
+    {{"criterion": "Skills", "winner": "name.pdf", "notes": "short blunt comparison"}}
+  ],
+  "strengths": [
+    {{"file_name": "name.pdf", "points": ["strength 1", "strength 2"]}}
+  ],
+  "weaknesses": [
+    {{"file_name": "name.pdf", "points": ["weakness 1", "weakness 2"]}}
+  ],
+  "recommendation": "what the user should do next"
+}}
+
+Documents:
+{docs_text}
+"""
+    ai_text = await groq_chat(
+        [{"role": "system", "content": "Return strict JSON only."}, {"role": "user", "content": prompt}],
+        api_key,
+        model,
+        temperature=0.4,
+        max_tokens=1800,
+    )
+    result = parse_json_object(ai_text)
+    result["meta"] = {
+        "file_names": [doc["file_name"] for doc in documents],
+        "documents": len(documents),
+        "seconds": round(time.time() - started, 2),
+        "model": model or DEFAULT_MODEL,
+    }
+    return result
+
+
 @app.post("/api/summarize")
 async def summarize_pdf(
     file: UploadFile = File(...),
