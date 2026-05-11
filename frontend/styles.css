@@ -188,6 +188,49 @@ button:disabled {
   line-height: 1.4;
 }
 
+.api-help {
+  display: grid;
+  gap: 10px;
+  border: 1px solid #c7ddf3;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #f8fbff, #edf7ff);
+  padding: 11px 12px;
+}
+
+.api-help div {
+  display: grid;
+  gap: 4px;
+}
+
+.api-help span {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.api-help a {
+  color: var(--accent-dark);
+  font-size: 13px;
+  font-weight: 900;
+  text-decoration: none;
+}
+
+.api-help a:hover {
+  text-decoration: underline;
+}
+
+.api-help ol {
+  display: grid;
+  gap: 5px;
+  margin: 0;
+  padding-left: 18px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
 .new-chat {
   width: 100%;
   padding: 13px;
