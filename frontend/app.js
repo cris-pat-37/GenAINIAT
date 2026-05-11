@@ -184,7 +184,25 @@ function switchTab(tab) {
       <button type="button" data-prompt="Who is the strongest and why?">Best one?</button>
     `;
   bindSuggestions();
+  closeSidebar();
+}
+
+function openSidebar() {
+  $(".sidebar").classList.add("open");
+  $("#sidebarBackdrop").classList.add("show");
+}
+
+function closeSidebar() {
   $(".sidebar").classList.remove("open");
+  $("#sidebarBackdrop").classList.remove("show");
+}
+
+function toggleSidebar() {
+  if ($(".sidebar").classList.contains("open")) {
+    closeSidebar();
+  } else {
+    openSidebar();
+  }
 }
 
 async function sendChat(message) {
@@ -568,7 +586,12 @@ $("#clearFile").addEventListener("click", () => {
   $("#fileChip").classList.add("hidden");
 });
 
-$("#mobileMenu").addEventListener("click", () => $(".sidebar").classList.toggle("open"));
+$("#mobileMenu").addEventListener("click", toggleSidebar);
+$("#sidebarClose").addEventListener("click", closeSidebar);
+$("#sidebarBackdrop").addEventListener("click", closeSidebar);
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") closeSidebar();
+});
 chatLog.addEventListener("click", async (event) => {
   const button = event.target.closest("[data-copy-code]");
   if (!button) return;

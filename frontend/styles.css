@@ -62,6 +62,11 @@ button:disabled {
   padding: 18px;
 }
 
+.sidebar-backdrop,
+.sidebar-close {
+  display: none;
+}
+
 .brand {
   display: flex;
   align-items: center;
@@ -741,6 +746,16 @@ button:disabled {
     display: none;
   }
 
+  .sidebar-backdrop.show {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 4;
+    border: 0;
+    background: rgba(16, 32, 51, 0.38);
+    backdrop-filter: blur(2px);
+  }
+
   .sidebar.open {
     display: flex;
     position: fixed;
@@ -748,6 +763,20 @@ button:disabled {
     z-index: 5;
     width: min(350px, 88vw);
     box-shadow: 20px 0 60px rgba(45, 91, 140, 0.22);
+  }
+
+  .sidebar-close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: auto;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--panel);
+    color: var(--accent-dark);
+    padding: 8px 10px;
+    font-size: 12px;
+    font-weight: 900;
   }
 
   .mobile-menu {
