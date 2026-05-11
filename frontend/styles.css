@@ -148,6 +148,7 @@ button:disabled {
 .settings input,
 .settings select,
 .settings-head button,
+.save-key,
 .new-chat,
 .mode-item,
 .recent-item,
@@ -184,8 +185,28 @@ button:disabled {
   font-weight: 700;
 }
 
-.side-note {
+.save-key {
+  width: 100%;
+  padding: 11px 12px;
+  border-color: #8bc2f7;
+  background: var(--accent);
+  color: #ffffff;
+  font-weight: 900;
+}
+
+.save-key:hover {
+  background: var(--accent-dark);
+}
+
+.side-note,
+.key-status {
   line-height: 1.4;
+}
+
+.key-status {
+  margin: -4px 0 0;
+  color: var(--muted);
+  font-size: 12px;
 }
 
 .api-help {

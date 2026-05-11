@@ -14,6 +14,7 @@ const $$ = (selector) => Array.from(document.querySelectorAll(selector));
 const chatLog = $("#chatLog");
 const chatInput = $("#chatInput");
 const apiKeyInput = $("#apiKey");
+const keyStatus = $("#keyStatus");
 const modelSelect = $("#model");
 const toneSelect = $("#tone");
 const summaryModeSelect = $("#summaryMode");
@@ -32,16 +33,41 @@ function showToast(message) {
 
 function getAiConfig() {
   return {
-    api_key: apiKeyInput.value.trim() || null,
+    api_key: localStorage.getItem("groqApiKey") || null,
     model: modelSelect.value,
   };
 }
 
 function saveSettings() {
-  localStorage.setItem("groqApiKey", apiKeyInput.value.trim());
   localStorage.setItem("model", modelSelect.value);
   localStorage.setItem("tone", toneSelect.value);
   state.tone = toneSelect.value;
+}
+
+function updateKeyStatus() {
+  const savedKey = localStorage.getItem("groqApiKey") || "";
+  const typedKey = apiKeyInput.value.trim();
+  if (savedKey && typedKey === savedKey) {
+    keyStatus.textContent = "Saved key active.";
+  } else if (savedKey && typedKey !== savedKey) {
+    keyStatus.textContent = "Unsaved change. Click Save Key before sending.";
+  } else if (typedKey) {
+    keyStatus.textContent = "Unsaved key. Click Save Key before sending.";
+  } else {
+    keyStatus.textContent = "Server key active until you save your own.";
+  }
+}
+
+function saveApiKey() {
+  const key = apiKeyInput.value.trim();
+  if (key) {
+    localStorage.setItem("groqApiKey", key);
+    showToast("API key saved. Your key will be used now.");
+  } else {
+    localStorage.removeItem("groqApiKey");
+    showToast("API key cleared. Server key will be used.");
+  }
+  updateKeyStatus();
 }
 
 function setLoading(isLoading) {
@@ -516,7 +542,8 @@ chatLog.addEventListener("click", async (event) => {
     button.textContent = "Copy";
   }, 1200);
 });
-apiKeyInput.addEventListener("change", saveSettings);
+apiKeyInput.addEventListener("input", updateKeyStatus);
+$("#saveApiKey").addEventListener("click", saveApiKey);
 modelSelect.addEventListener("change", saveSettings);
 toneSelect.addEventListener("change", saveSettings);
 
@@ -528,11 +555,13 @@ $("#clearSettings").addEventListener("click", () => {
   modelSelect.value = "llama-3.1-8b-instant";
   toneSelect.value = "savage";
   saveSettings();
+  updateKeyStatus();
   showToast("Settings reset.");
 });
 
 bindSuggestions();
 renderChatHistory();
 syncIdentity();
+updateKeyStatus();
 switchTab("chat");
 checkHealth();
