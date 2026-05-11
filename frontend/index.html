@@ -10,32 +10,40 @@
     <link rel="stylesheet" href="/assets/styles.css" />
   </head>
   <body>
-    <div class="ambient ambient-one"></div>
-    <div class="ambient ambient-two"></div>
-    <div class="app-shell">
+    <div class="app">
       <aside class="sidebar">
         <div class="brand">
-          <div class="brand-mark">G</div>
+          <div class="brand-mark">S</div>
           <div>
-            <h1>GenAI NIAT</h1>
-            <p>Chat + PDF intelligence</p>
+            <h1>Savage Sigma AI</h1>
+            <p>Chatbot + PDF summarizer</p>
           </div>
         </div>
 
-        <nav class="nav-tabs" aria-label="Workspace">
-          <button class="nav-button active" data-tab="chat">Savage AI</button>
-          <button class="nav-button" data-tab="pdf">PDF Studio</button>
+        <button class="new-chat" id="newChat" type="button">New chat</button>
+
+        <nav class="mode-list" aria-label="Project mode">
+          <button class="mode-item active" type="button" data-tab="chat">
+            <span>Savage Chat</span>
+            <small>Attitude AI assistant</small>
+          </button>
+          <button class="mode-item" type="button" data-tab="pdf">
+            <span>PDF Summarizer</span>
+            <small>Upload, summarize, revise</small>
+          </button>
         </nav>
 
         <section class="settings">
-          <div class="section-title">
-            <span>Settings</span>
-            <button id="clearSettings" class="ghost-button" type="button">Reset</button>
+          <div class="settings-head">
+            <strong>Settings</strong>
+            <button id="clearSettings" type="button">Reset</button>
           </div>
+
           <label>
             API key
-            <input id="apiKey" type="password" placeholder="Uses server key by default" autocomplete="off" />
+            <input id="apiKey" type="password" placeholder="Server key is used by default" autocomplete="off" />
           </label>
+
           <label>
             Model
             <select id="model">
@@ -45,131 +53,69 @@
               <option value="gemma2-9b-it">gemma2-9b-it</option>
             </select>
           </label>
-          <p class="hint">Paste a key only when you want to override the deployment key.</p>
+
+          <label id="toneWrap">
+            Tone
+            <select id="tone">
+              <option value="savage">Savage</option>
+              <option value="mentor">Mentor</option>
+              <option value="exam">Exam</option>
+            </select>
+          </label>
+
+          <label id="summaryWrap" class="hidden">
+            Summary mode
+            <select id="summaryMode">
+              <option value="quick">Quick</option>
+              <option value="deep" selected>Deep</option>
+              <option value="creative">Creative</option>
+              <option value="exam">Exam</option>
+            </select>
+          </label>
         </section>
 
-        <div class="status-pill" id="apiStatus">Checking backend...</div>
+        <div class="status" id="apiStatus">Checking backend...</div>
       </aside>
 
-      <main class="workspace">
-        <section class="topbar">
+      <main class="main">
+        <header class="topbar">
+          <button class="mobile-menu" id="mobileMenu" type="button">Menu</button>
           <div>
-            <p class="eyebrow">Live deploy ready intelligence lab</p>
-            <h2 id="workspaceTitle">Savage AI Chat</h2>
+            <p id="modeLabel">Savage Chat</p>
+            <h2 id="workspaceTitle">Ask Sigma anything</h2>
           </div>
-          <div class="mode-switch" id="modeSwitch">
-            <button type="button" data-tone="savage" class="active">Savage</button>
-            <button type="button" data-tone="mentor">Mentor</button>
-            <button type="button" data-tone="exam">Exam</button>
+          <div class="identity">
+            <span>Name</span>
+            <strong id="userName">Not set</strong>
           </div>
-        </section>
+        </header>
 
-        <section class="panel active" id="chatPanel">
-          <div class="chat-layout">
-            <div class="chat-window">
-              <div class="chat-log" id="chatLog">
-                <article class="message bot">
-                  <div class="avatar">S</div>
-                  <div class="bubble">
-                    Drop your name first. Then ask me anything: coding, GenAI, exams, project viva, career plans. I will help, but I may judge the laziness.
-                  </div>
-                </article>
-              </div>
-              <form class="composer" id="chatForm">
-                <input id="chatInput" type="text" placeholder="Ask Savage AI..." autocomplete="off" />
-                <button type="submit">Send</button>
-              </form>
+        <section class="chat-stream" id="chatLog" aria-live="polite">
+          <article class="message assistant">
+            <div class="avatar">S</div>
+            <div class="message-body">
+              <strong>Savage Sigma AI</strong>
+              <p>Drop your name first. Then ask me coding, GenAI, viva, or project questions. I will help, but I am not here to babysit weak prompts.</p>
             </div>
-            <aside class="inspector">
-              <div class="metric">
-                <span>Name</span>
-                <strong id="userName">Not set</strong>
-              </div>
-              <div class="metric">
-                <span>Tone</span>
-                <strong id="toneName">Savage</strong>
-              </div>
-              <div class="quick-prompts">
-                <button type="button" data-prompt="My name is Sunny">Set name</button>
-                <button type="button" data-prompt="Explain RAG in simple words">RAG basics</button>
-                <button type="button" data-prompt="Prepare me for a GenAI project viva">Viva prep</button>
-              </div>
-            </aside>
-          </div>
+          </article>
         </section>
 
-        <section class="panel" id="pdfPanel">
-          <div class="pdf-layout">
-            <section class="pdf-command">
-              <div class="upload-zone" id="dropZone">
-                <input id="pdfFile" type="file" accept="application/pdf" hidden />
-                <div class="upload-icon">PDF</div>
-                <div>
-                  <h3>Drop a PDF into the neural reader</h3>
-                  <p>Summaries become connected flashcards you can inspect and move around.</p>
-                </div>
-                <button id="chooseFile" type="button">Choose PDF</button>
-                <span id="fileName">No file selected</span>
-              </div>
-
-              <div class="summary-controls">
-                <div class="segmented" id="summaryMode">
-                  <button type="button" data-mode="quick">Quick</button>
-                  <button type="button" data-mode="deep" class="active">Deep</button>
-                  <button type="button" data-mode="creative">Creative</button>
-                  <button type="button" data-mode="exam">Exam</button>
-                </div>
-                <button id="summarizeBtn" type="button">Summarize</button>
-              </div>
-            </section>
-
-            <div class="result-grid">
-              <article class="summary-block">
-                <div class="section-title">
-                  <span id="summaryTitle">Summary will appear here</span>
-                  <button id="copySummary" class="ghost-button" type="button">Copy</button>
-                </div>
-                <p id="overview">Upload a document to create a connected summary with revision material.</p>
-                <ul id="keyPoints"></ul>
-              </article>
-
-              <article class="graph-block neural-card">
-                <div class="section-title">
-                  <span>Neural Flashcard Map</span>
-                  <span id="pdfMeta" class="mini-meta">Waiting</span>
-                </div>
-                <div class="neural-stage" id="neuralStage">
-                  <canvas id="conceptCanvas" width="900" height="560"></canvas>
-                  <div id="neuralNodes" class="neural-nodes" aria-label="Interactive flashcard network"></div>
-                  <div class="empty-network" id="emptyNetwork">
-                    <strong>Upload a PDF to activate the network</strong>
-                    <span>Concepts and flashcards will connect like a study graph.</span>
-                  </div>
-                </div>
-              </article>
-
-              <article class="cards-block focus-card">
-                <div class="section-title">
-                  <span>Selected Flashcard</span>
-                </div>
-                <div id="studyCards" class="study-cards">
-                  <div class="study-card placeholder">
-                    <strong>No card selected</strong>
-                    <p>Click a node in the neural map after summarizing.</p>
-                  </div>
-                </div>
-              </article>
-
-              <article class="cards-block">
-                <div class="section-title">
-                  <span>Keywords + Actions</span>
-                </div>
-                <div id="keywords" class="keywords"></div>
-                <ul id="actions" class="actions"></ul>
-              </article>
-            </div>
-          </div>
+        <section class="suggestions" id="suggestions">
+          <button type="button" data-prompt="My name is Sunny">Set my name</button>
+          <button type="button" data-prompt="Explain RAG in simple words">Explain RAG</button>
+          <button type="button" data-prompt="Prepare me for a GenAI project viva">Viva prep</button>
         </section>
+
+        <form class="composer" id="chatForm">
+          <input id="pdfFile" type="file" accept="application/pdf" hidden />
+          <button id="attachPdf" class="attach hidden" type="button">Upload PDF</button>
+          <input id="chatInput" type="text" placeholder="Message Savage Sigma AI..." autocomplete="off" />
+          <button id="sendButton" type="submit">Send</button>
+        </form>
+        <div class="file-chip hidden" id="fileChip">
+          <span id="fileName">No file selected</span>
+          <button id="clearFile" type="button">Remove</button>
+        </div>
       </main>
     </div>
 
