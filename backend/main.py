@@ -51,6 +51,14 @@ class ChatRequest(BaseModel):
     tone: str = "savage"
 
 
+class PdfChatRequest(BaseModel):
+    question: str = Field(..., min_length=1, max_length=4000)
+    summary: dict[str, Any] = Field(default_factory=dict)
+    history: list[ChatMessage] = Field(default_factory=list)
+    api_key: str | None = None
+    model: str | None = None
+
+
 def get_api_key(api_key: str | None) -> str:
     resolved = (api_key or os.getenv("GROQ_API_KEY") or "").strip()
     if not resolved:
@@ -127,10 +135,10 @@ async def chat(request: ChatRequest) -> dict[str, Any]:
 
     if not detected_name:
         system_prompt = """
-You are Savage Sigma AI, a witty study partner with controlled savage energy.
+You are Savage Sigma AI, a ruthless but useful study partner.
 The user has not shared their name yet.
 Do not answer their actual question. Demand their name first.
-Be funny and sharp, but do not use slurs, hate, threats, sexual content, or targeted harassment.
+Roast the laziness hard, but do not use slurs, hate, threats, sexual content, or targeted harassment.
 Keep it under 45 words.
 """
         reply = await groq_chat(
@@ -143,22 +151,54 @@ Keep it under 45 words.
         return {"reply": reply, "user_name": None}
 
     tone_rules = {
-        "mentor": "Be direct, encouraging, and practical. Keep the Savage AI personality light.",
-        "savage": "Be sharp, funny, and challenging. Roast weak thinking, not identity.",
-        "exam": "Answer like an exam coach: concise, structured, and focused on scoring marks.",
+        "mentor": "Be practical but still blunt. Encourage only after pointing out the weak habit.",
+        "savage": "Maximum Sigma roast mode. Be brutal about lazy/simple questions. Challenge first, answer second.",
+        "exam": "Be an exam coach with sharp pressure. Make the user earn clarity with concise, scoring-focused points.",
     }
     system_prompt = f"""
 You are Savage Sigma AI inside the GenAI NIAT project.
 The user's name is {detected_name}.
 {tone_rules.get(request.tone, tone_rules["savage"])}
 Never use slurs, hate, threats, sexual content, or targeted harassment.
-If the user asks a serious or academic question, help first and add one short savage line only if useful.
-Prefer clear steps, examples, and study-friendly explanations.
+No sugar coating. Your default personality is full attitude: roast weak effort, lazy prompts, and basic questions.
+For very simple questions, do NOT immediately spoon-feed. First roast, then give a hint or ask them to try.
+If the user has already tried, failed, or seems tired/frustrated, stop clowning for a moment: motivate them, give a clear hint, then show the answer.
+For serious academic/project questions, still be useful, but keep the Sigma pressure high.
+When giving code, use fenced markdown code blocks.
+Keep answers concise unless the user asks for detail.
 """
     safe_history = [msg.model_dump() for msg in request.history[-10:] if msg.role in {"user", "assistant"}]
     messages = [{"role": "system", "content": system_prompt}, *safe_history, {"role": "user", "content": request.message}]
     reply = await groq_chat(messages, request.api_key, request.model, temperature=0.85, max_tokens=600)
     return {"reply": reply, "user_name": detected_name}
+
+
+@app.post("/api/pdf-chat")
+async def pdf_chat(request: PdfChatRequest) -> dict[str, str]:
+    if not request.summary:
+        raise HTTPException(status_code=400, detail="Summarize a PDF before asking follow-up questions.")
+
+    summary_context = json.dumps(request.summary, ensure_ascii=False)[:12000]
+    safe_history = [msg.model_dump() for msg in request.history[-8:] if msg.role in {"user", "assistant"}]
+    system_prompt = f"""
+You are Savage Sigma AI answering follow-up questions about a PDF summary.
+Use ONLY the PDF summary context below. If the answer is not in the summary, say that bluntly and tell the user what to check in the PDF.
+No sugar coating. Be brutally honest, high-attitude, and funny, but do not use slurs, hate, threats, sexual content, or targeted harassment.
+For lazy follow-up questions, roast first, then give a useful answer.
+If the user seems confused or tired, motivate them briefly, give hints, then explain clearly.
+When giving code or structured examples, use fenced markdown code blocks.
+
+PDF summary context:
+{summary_context}
+"""
+    reply = await groq_chat(
+        [{"role": "system", "content": system_prompt}, *safe_history, {"role": "user", "content": request.question}],
+        request.api_key,
+        request.model,
+        temperature=0.85,
+        max_tokens=700,
+    )
+    return {"reply": reply}
 
 
 def extract_pdf_text(file_bytes: bytes) -> tuple[str, int]:
@@ -269,4 +309,3 @@ def serve_frontend(full_path: str) -> FileResponse:
     if full_path and requested.is_file():
         return FileResponse(requested)
     return FileResponse(FRONTEND_DIR / "index.html")
-

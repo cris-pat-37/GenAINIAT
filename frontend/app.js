@@ -4,6 +4,8 @@ const state = {
   userName: localStorage.getItem("userName") || "",
   history: JSON.parse(localStorage.getItem("sigmaChatHistoryV2") || "[]"),
   selectedFile: null,
+  pdfSummary: null,
+  pdfHistory: [],
 };
 
 const $ = (selector) => document.querySelector(selector);
@@ -112,7 +114,7 @@ function switchTab(tab) {
     : `
       <button type="button" data-prompt="Summarize this PDF for exam revision">Exam summary</button>
       <button type="button" data-prompt="Create flashcards from this PDF">Flashcards</button>
-      <button type="button" data-prompt="Give me keywords and action items">Keywords</button>
+      <button type="button" data-prompt="Ask a follow-up from this summary">Follow-up</button>
     `;
   bindSuggestions();
   $(".sidebar").classList.remove("open");
@@ -239,6 +241,8 @@ function renderFormattedText(text) {
 }
 
 function renderSummary(data) {
+  state.pdfSummary = data;
+  state.pdfHistory = [];
   const points = (data.key_points || []).map((item) => `<li>${escapeHtml(item)}</li>`).join("");
   const actions = (data.action_items || []).map((item) => `<li>${escapeHtml(item)}</li>`).join("");
   const keywords = (data.keywords || []).map((item) => `<span class="tag">${escapeHtml(item)}</span>`).join("");
@@ -261,8 +265,36 @@ function renderSummary(data) {
       <div class="tag-row">${keywords || "<span class='tag'>None</span>"}</div>
       <h4>Action Items</h4>
       <ul>${actions || "<li>No action items returned.</li>"}</ul>
+      <p><strong>Now ask follow-up questions about this PDF.</strong> I will answer from this summary, not hallucinate like a sleepy intern.</p>
     </div>
   `, true);
+}
+
+async function askPdfFollowup(question) {
+  addMessage("user", question);
+  state.pdfHistory.push({ role: "user", content: question });
+  setLoading(true);
+
+  try {
+    const response = await fetch("/api/pdf-chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        question,
+        summary: state.pdfSummary,
+        history: state.pdfHistory.slice(-8),
+        ...getAiConfig(),
+      }),
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.detail || "PDF follow-up failed");
+    addMessage("assistant", data.reply);
+    state.pdfHistory.push({ role: "assistant", content: data.reply });
+  } catch (error) {
+    addMessage("assistant", `PDF follow-up failed: ${error.message}`);
+  } finally {
+    setLoading(false);
+  }
 }
 
 async function summarizePdf(userPrompt) {
@@ -301,6 +333,8 @@ function setFile(file) {
     return;
   }
   state.selectedFile = file;
+  state.pdfSummary = null;
+  state.pdfHistory = [];
   $("#fileName").textContent = file.name;
   $("#fileChip").classList.remove("hidden");
   addMessage("assistant", `PDF loaded: ${file.name}. Hit Send to summarize it, or type what kind of summary you want.`);
@@ -330,6 +364,10 @@ $("#chatForm").addEventListener("submit", (event) => {
   const message = chatInput.value.trim();
   chatInput.value = "";
   if (state.tab === "pdf") {
+    if (state.pdfSummary && message && !/summari[sz]e|new summary|again/i.test(message)) {
+      askPdfFollowup(message);
+      return;
+    }
     summarizePdf(message || "Summarize this PDF");
     return;
   }
@@ -351,6 +389,8 @@ $("#attachPdf").addEventListener("click", () => $("#pdfFile").click());
 $("#pdfFile").addEventListener("change", (event) => setFile(event.target.files[0]));
 $("#clearFile").addEventListener("click", () => {
   state.selectedFile = null;
+  state.pdfSummary = null;
+  state.pdfHistory = [];
   $("#pdfFile").value = "";
   $("#fileChip").classList.add("hidden");
 });
